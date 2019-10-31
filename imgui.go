@@ -671,14 +671,9 @@ func TreePop() {
 }
 
 // SetNextTreeNodeOpen sets the open/collapsed state of the following tree node.
-func SetNextTreeNodeOpen(open bool, cond Condition) {
-	C.iggSetNextTreeNodeOpen(castBool(open), C.int(cond))
-}
-
-// TreeNodeToLabelSpacing returns the horizontal distance preceding label for a regular unframed TreeNode.
-func TreeNodeToLabelSpacing() float32 {
-	return float32(C.iggGetTreeNodeToLabelSpacing())
-}
+//func SetNextTreeNodeOpen(open bool, cond Condition) {
+//	C.iggSetNextTreeNodeOpen(castBool(open), C.int(cond))
+//}
 
 // SelectableV returns true if the user clicked it, so you can modify your selection state.
 // flags are the SelectableFlags to apply.
@@ -1072,4 +1067,14 @@ func MouseCursor() int {
 // SetMouseCursor sets desired cursor type.
 func SetMouseCursor(cursor int) {
 	C.iggSetMouseCursor(C.int(cursor))
+}
+
+// UpdatePlatformWindows handles the creation/update of all OS windows via function defined in the ImGuiPlatformIO api.
+func UpdatePlatformWindows() {
+	C.iggUpdatePlatformWindows()
+}
+
+// RenderPlatformWindowsDefault is a default/basic function for performing the rendering/swap of multiple Platform Windows
+func RenderPlatformWindowsDefault() {
+	C.iggRenderPlatformWindowsDefault()
 }

@@ -19,6 +19,16 @@ const (
 	// You may want to honor requests from imgui by reading GetMouseCursor() yourself instead.
 	ConfigFlagNoMouseCursorChange
 
+	// [BETA] Docking
+	// Docking enable flags.
+	ConfigFlagEnableDocking
+
+	// [BETA] Viewports
+	// When using viewports it is recommended that your default value for ImGuiCol_WindowBg is opaque (Alpha=1.0) so transition to a viewport won't be noticeable.
+	ConfigFlagEnableViewports        = 1 << 10  // Viewport enable flags (require both ImGuiConfigFlags_PlatformHasViewports + ImGuiConfigFlags_RendererHasViewports set by the respective back-ends)
+	ConfigFlagDpiEnableScaleViewports = 1 << 14  // [BETA: Don't use] FIXME-DPI: Reposition and resize imgui windows when the DpiScale of a viewport changed (mostly useful for the main viewport hosting other window). Note that resizing the main window itself is up to your application.
+	ConfigFlagDpiEnableScaleFonts    = 1 << 15  // [BETA: Don't use] FIXME-DPI: Request bitmap-scaled fonts to match DpiScale. This is a very low-quality workaround. The correct way to handle DPI is _currently_ to replace the atlas and/or fonts in the Platform_OnChangedViewport callback, but this is all early work in progress.
+
 	// User storage (to allow your back-end/engine to communicate to code that may be shared between multiple projects. Those flags are not used by core ImGui)
 
 	// ConfigFlagIsSRGB application is SRGB-aware.
