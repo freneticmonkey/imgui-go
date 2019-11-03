@@ -19,6 +19,8 @@ typedef void *IggGlyphRanges;
 typedef void *IggGuiStyle;
 typedef void *IggInputTextCallbackData;
 typedef void *IggIO;
+typedef void *IggGuiPlatformIO;
+typedef void *IggGuiViewport;
 
 typedef struct tagIggVec2
 {

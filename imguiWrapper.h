@@ -12,6 +12,9 @@ extern void iggDestroyContext(IggContext context);
 extern IggContext iggGetCurrentContext();
 extern void iggSetCurrentContext(IggContext context);
 
+extern IggGuiPlatformIO iggGetCurrentPlatformIO(void);
+extern IggGuiViewport iggGetMainViewport(void);
+
 extern IggIO iggGetCurrentIO(void);
 extern IggGuiStyle iggGetCurrentStyle(void);
 extern void iggNewFrame(void);
