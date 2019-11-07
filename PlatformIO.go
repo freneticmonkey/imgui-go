@@ -1,12 +1,52 @@
 package imgui
 
-// #include "IOWrapper.h"
+// #include "PlatformIOWrapper.h"
 import "C"
+import (
+	"github.com/mattn/go-pointer"
+	"unsafe"
+)
 
-// IO is where your app communicates with ImGui. Access via CurrentIO().
-// Read 'Programmer guide' section in imgui.cpp file for general usage.
-type IO struct {
-	handle C.IggIO
+type WindowCallback func(v *Viewport)
+
+// PlatformIO is
+type PlatformIO struct {
+	handle C.IggPlatformIO
+
+	CreateWindow       WindowCallback
+	DestroyWindow      WindowCallback
+	ShowWindow         WindowCallback
+	SetWindowPos       WindowCallback
+	GetWindowPos       WindowCallback
+	SetWindowSize      WindowCallback
+	GetWindowSize      WindowCallback
+	SetWindowFocus     WindowCallback
+	GetWindowFocus     WindowCallback
+	GetWindowMinimized WindowCallback
+	SetWindowTitle     WindowCallback
+	RenderWindow       WindowCallback
+	SwapBuffers        WindowCallback
+}
+
+//export
+
+func goCreateWindowCallback(v unsafe.Pointer) {
+
+	// TODO: Store PlatformIO in pointer and restore here to call the registered callback
+	//viewport := pointer.Restore(v).(*Viewport)
+
+}
+
+func (io PlatformIO) SetCreateWindowCallback(cbfun WindowCallback) WindowCallback {
+	previous := io.CreateWindow
+
+	io.CreateWindow = cbfun
+
+	if cbfun == nil {
+		C.
+	}
+
+	return previous
 }
 
 // WantCaptureMouse returns true if imgui will use the mouse inputs.
