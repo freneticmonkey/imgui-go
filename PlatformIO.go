@@ -2,12 +2,25 @@ package imgui
 
 // #include "PlatformIOWrapper.h"
 import "C"
+
 import (
-	"github.com/mattn/go-pointer"
 	"unsafe"
 )
 
+//WindowCallback functions all take a Viewport parameter
 type WindowCallback func(v *Viewport)
+
+//GetWindowBoolCallback function signature
+type GetWindowBoolCallback func(v *Viewport) bool
+
+//SetWindowVecCallback function signature
+type SetWindowVecCallback func(v *Viewport, xpos, ypos float64)
+
+//GetWindowVecCallback function signature
+type GetWindowVecCallback func(v *Viewport) (float64, float64)
+
+//SetWindowTitleCallback function signature
+type SetWindowTitleCallback func(v *Viewport, title string)
 
 // PlatformIO is
 type PlatformIO struct {
@@ -16,169 +29,365 @@ type PlatformIO struct {
 	CreateWindow       WindowCallback
 	DestroyWindow      WindowCallback
 	ShowWindow         WindowCallback
-	SetWindowPos       WindowCallback
-	GetWindowPos       WindowCallback
-	SetWindowSize      WindowCallback
-	GetWindowSize      WindowCallback
+	SetWindowPos       SetWindowVecCallback
+	GetWindowPos       GetWindowVecCallback
+	SetWindowSize      SetWindowVecCallback
+	GetWindowSize      GetWindowVecCallback
 	SetWindowFocus     WindowCallback
-	GetWindowFocus     WindowCallback
-	GetWindowMinimized WindowCallback
-	SetWindowTitle     WindowCallback
+	GetWindowFocus     GetWindowBoolCallback
+	GetWindowMinimized GetWindowBoolCallback
+	SetWindowTitle     SetWindowTitleCallback
 	RenderWindow       WindowCallback
 	SwapBuffers        WindowCallback
 }
 
-//export
+var platform PlatformIO
 
-func goCreateWindowCallback(v unsafe.Pointer) {
-
-	// TODO: Store PlatformIO in pointer and restore here to call the registered callback
-	//viewport := pointer.Restore(v).(*Viewport)
-
+// CurrentPlatformIO returns access to the ImGui communication struct for the currently active context.
+func CurrentPlatformIO() PlatformIO {
+	platform = PlatformIO{handle: C.iggGetCurrentPlatformIO()}
+	return platform
 }
 
-func (io PlatformIO) SetCreateWindowCallback(cbfun WindowCallback) WindowCallback {
+// TODO: Store PlatformIO in pointer and restore here to call the registered callback
+	//viewport := pointer.Restore(v).(*Viewport)
+	// fmt.Println("Create Window Trigger hit")
+
+//export goCreateWindowCallback
+func goCreateWindowCallback(v unsafe.Pointer) {
+	viewport := GetViewport(v)
+	// Forwarding callback into the registered Go function
+	platform.CreateWindow(viewport)
+}
+
+//SetCallbackCreateWindow sets the callback function in the PlatformIO struct and triggers
+//the C setup to route the callback back into Go
+func (io PlatformIO) SetCallbackCreateWindow(cbfun WindowCallback) WindowCallback {
 	previous := io.CreateWindow
 
 	io.CreateWindow = cbfun
 
+	// if the function is null, clear the callback
 	if cbfun == nil {
-		C.
+		C.iggRemoveCallbackCreateWindow(io.handle)
+	} else {
+		C.iggSetCallbackCreateWindow(io.handle)
 	}
 
 	return previous
 }
 
-// WantCaptureMouse returns true if imgui will use the mouse inputs.
-// Do not dispatch them to your main game/application in this case.
-// In either case, always pass on mouse inputs to imgui.
-// (e.g. unclicked mouse is hovering over an imgui window, widget is active, mouse was clicked over an imgui window, etc.)
-func (io IO) WantCaptureMouse() bool {
-	return C.iggWantCaptureMouse(io.handle) != 0
+//export goDestroyWindowCallback
+func goDestroyWindowCallback(v unsafe.Pointer) {
+	viewport := GetViewport(v)
+
+	// Forwarding callback into the registered Go function
+	platform.DestroyWindow(viewport)
 }
 
-// WantCaptureKeyboard returns true if imgui will use the keyboard inputs.
-// Do not dispatch them to your main game/application (in both cases, always pass keyboard inputs to imgui).
-// (e.g. InputText active, or an imgui window is focused and navigation is enabled, etc.).
-func (io IO) WantCaptureKeyboard() bool {
-	return C.iggWantCaptureKeyboard(io.handle) != 0
-}
+//SetCallbackDestroyWindow sets the callback function in the PlatformIO struct and triggers
+//the C setup to route the callback back into Go
+func (io PlatformIO) SetCallbackDestroyWindow(cbfun WindowCallback) WindowCallback {
+	previous := io.DestroyWindow
 
-// WantTextInput is true, you may display an on-screen keyboard.
-// This is set by ImGui when it wants textual keyboard input to happen (e.g. when a InputText widget is active).
-func (io IO) WantTextInput() bool {
-	return C.iggWantTextInput(io.handle) != 0
-}
+	io.DestroyWindow = cbfun
 
-// SetDisplaySize sets the size in pixels.
-func (io IO) SetDisplaySize(value Vec2) {
-	out, _ := value.wrapped()
-	C.iggIoSetDisplaySize(io.handle, out)
-}
-
-// Fonts returns the font atlas to load and assemble one or more fonts into a single tightly packed texture.
-func (io IO) Fonts() FontAtlas {
-	return FontAtlas(C.iggIoGetFonts(io.handle))
-}
-
-// SetMousePosition sets the mouse position, in pixels.
-// Set to Vec2(-math.MaxFloat32,-mathMaxFloat32) if mouse is unavailable (on another screen, etc.)
-func (io IO) SetMousePosition(value Vec2) {
-	posArg, _ := value.wrapped()
-	C.iggIoSetMousePosition(io.handle, posArg)
-}
-
-// SetMouseButtonDown sets whether a specific mouse button is currently pressed.
-// Mouse buttons: left, right, middle + extras.
-// ImGui itself mostly only uses left button (BeginPopupContext** are using right button).
-// Other buttons allows us to track if the mouse is being used by your application +
-// available to user as a convenience via IsMouse** API.
-func (io IO) SetMouseButtonDown(index int, down bool) {
-	var downArg C.IggBool
-	if down {
-		downArg = 1
+	// if the function is null, clear the callback
+	if cbfun == nil {
+		C.iggRemoveCallbackDestroyWindow(io.handle)
+	} else {
+		C.iggSetCallbackDestroyWindow(io.handle)
 	}
-	C.iggIoSetMouseButtonDown(io.handle, C.int(index), downArg)
+
+	return previous
 }
 
-// AddMouseWheelDelta adds the given offsets to the current mouse wheel values.
-// 1 vertical unit scrolls about 5 lines text.
-// Most users don't have a mouse with an horizontal wheel, may not be provided by all back-ends.
-func (io IO) AddMouseWheelDelta(horizontal, vertical float32) {
-	C.iggIoAddMouseWheelDelta(io.handle, C.float(horizontal), C.float(vertical))
+//export goShowWindowCallback
+func goShowWindowCallback(v unsafe.Pointer) {
+	viewport := GetViewport(v)
+
+	// Forwarding callback into the registered Go function
+	platform.ShowWindow(viewport)
 }
 
-// SetDeltaTime sets the time elapsed since last frame, in seconds.
-func (io IO) SetDeltaTime(value float32) {
-	C.iggIoSetDeltaTime(io.handle, C.float(value))
+//SetCallbackShowWindow sets the callback function in the PlatformIO struct and triggers
+//the C setup to route the callback back into Go
+func (io PlatformIO) SetCallbackShowWindow(cbfun WindowCallback) WindowCallback {
+	previous := io.ShowWindow
+
+	io.ShowWindow = cbfun
+
+	// if the function is null, clear the callback
+	if cbfun == nil {
+		C.iggRemoveCallbackShowWindow(io.handle)
+	} else {
+		C.iggSetCallbackShowWindow(io.handle)
+	}
+
+	return previous
 }
 
-// SetFontGlobalScale sets the global scaling factor for all fonts.
-func (io IO) SetFontGlobalScale(value float32) {
-	C.iggIoSetFontGlobalScale(io.handle, C.float(value))
+//export goSetWindowPosCallback
+func goSetWindowPosCallback(v unsafe.Pointer, xpos, ypos C.float) {
+	viewport := GetViewport(v)
+
+	// Forwarding callback into the registered Go function
+	platform.SetWindowPos(viewport, float64(xpos), float64(ypos))
 }
 
-// KeyPress sets the KeysDown flag.
-func (io IO) KeyPress(key int) {
-	C.iggIoKeyPress(io.handle, C.int(key))
+//SetCallbackSetWindowPos sets the callback function in the PlatformIO struct and triggers
+//the C setup to route the callback back into Go
+func (io PlatformIO) SetCallbackSetWindowPos(cbfun SetWindowVecCallback) SetWindowVecCallback {
+	previous := io.SetWindowPos
+
+	io.SetWindowPos = cbfun
+
+	// if the function is null, clear the callback
+	if cbfun == nil {
+		C.iggRemoveCallbackSetWindowPos(io.handle)
+	} else {
+		C.iggSetCallbackSetWindowPos(io.handle)
+	}
+
+	return previous
 }
 
-// KeyRelease clears the KeysDown flag.
-func (io IO) KeyRelease(key int) {
-	C.iggIoKeyRelease(io.handle, C.int(key))
+//export goGetWindowPosCallback
+func goGetWindowPosCallback(v unsafe.Pointer, xpos, ypos *C.float) {
+	viewport := GetViewport(v)
+
+	// Forwarding callback into the registered Go function
+	x, y := platform.GetWindowPos(viewport)
+	*xpos = (C.float)(x)
+	*ypos = (C.float)(y) 
+
 }
 
-// KeyMap maps a key into the KeysDown array which represents your "native" keyboard state.
-func (io IO) KeyMap(imguiKey int, nativeKey int) {
-	C.iggIoKeyMap(io.handle, C.int(imguiKey), C.int(nativeKey))
+//SetCallbackGetWindowPos sets the callback function in the PlatformIO struct and triggers
+//the C setup to route the callback back into Go
+func (io PlatformIO) SetCallbackGetWindowPos(cbfun GetWindowVecCallback) GetWindowVecCallback {
+	previous := io.GetWindowPos
+
+	io.GetWindowPos = cbfun
+
+	// if the function is null, clear the callback
+	if cbfun == nil {
+		C.iggRemoveCallbackGetWindowPos(io.handle)
+	} else {
+		C.iggSetCallbackGetWindowPos(io.handle)
+	}
+
+	return previous
 }
 
-// KeyCtrl sets the keyboard modifier control pressed.
-func (io IO) KeyCtrl(leftCtrl int, rightCtrl int) {
-	C.iggIoKeyCtrl(io.handle, C.int(leftCtrl), C.int(rightCtrl))
+//export goSetWindowSizeCallback
+func goSetWindowSizeCallback(v unsafe.Pointer, xpos, ypos C.float) {
+	viewport := GetViewport(v)
+
+	// Forwarding callback into the registered Go function
+	platform.SetWindowSize(viewport, float64(xpos), float64(ypos))
 }
 
-// KeyShift sets the keyboard modifier shift pressed.
-func (io IO) KeyShift(leftShift int, rightShift int) {
-	C.iggIoKeyShift(io.handle, C.int(leftShift), C.int(rightShift))
+//SetCallbackSetWindowSize sets the callback function in the PlatformIO struct and triggers
+//the C setup to route the callback back into Go
+func (io PlatformIO) SetCallbackSetWindowSize(cbfun SetWindowVecCallback) SetWindowVecCallback {
+	previous := io.SetWindowSize
+
+	io.SetWindowSize = cbfun
+
+	// if the function is null, clear the callback
+	if cbfun == nil {
+		C.iggRemoveCallbackSetWindowSize(io.handle)
+	} else {
+		C.iggSetCallbackSetWindowSize(io.handle)
+	}
+
+	return previous
 }
 
-// KeyAlt sets the keyboard modifier alt pressed.
-func (io IO) KeyAlt(leftAlt int, rightAlt int) {
-	C.iggIoKeyAlt(io.handle, C.int(leftAlt), C.int(rightAlt))
+//export goGetWindowSizeCallback
+func goGetWindowSizeCallback(v unsafe.Pointer, xpos, ypos *C.float) {
+	viewport := GetViewport(v)
+
+	// Forwarding callback into the registered Go function
+	x, y := platform.GetWindowSize(viewport)
+	*xpos = (C.float)(x)
+	*ypos = (C.float)(y)
 }
 
-// KeySuper sets the keyboard modifier super pressed.
-func (io IO) KeySuper(leftSuper int, rightSuper int) {
-	C.iggIoKeySuper(io.handle, C.int(leftSuper), C.int(rightSuper))
+//SetCallbackGetWindowSize sets the callback function in the PlatformIO struct and triggers
+//the C setup to route the callback back into Go
+func (io PlatformIO) SetCallbackGetWindowSize(cbfun GetWindowVecCallback) GetWindowVecCallback {
+	previous := io.GetWindowSize
+
+	io.GetWindowSize = cbfun
+
+	// if the function is null, clear the callback
+	if cbfun == nil {
+		C.iggRemoveCallbackGetWindowSize(io.handle)
+	} else {
+		C.iggSetCallbackGetWindowSize(io.handle)
+	}
+
+	return previous
 }
 
-// AddInputCharacters adds a new character into InputCharacters[].
-func (io IO) AddInputCharacters(chars string) {
-	textArg, textFin := wrapString(chars)
-	defer textFin()
-	C.iggIoAddInputCharactersUTF8(io.handle, textArg)
+//export goSetWindowFocusCallback
+func goSetWindowFocusCallback(v unsafe.Pointer) {
+	viewport := GetViewport(v)
+
+	// Forwarding callback into the registered Go function
+	platform.SetWindowFocus(viewport)
 }
 
-// SetIniFilename changes the filename for the settings. Default: "imgui.ini".
-// Use an empty string to disable the ini from being used.
-func (io IO) SetIniFilename(value string) {
-	valueArg, valueFin := wrapString(value)
-	defer valueFin()
-	C.iggIoSetIniFilename(io.handle, valueArg)
+//SetCallbackSetWindowFocus sets the callback function in the PlatformIO struct and triggers
+//the C setup to route the callback back into Go
+func (io PlatformIO) SetCallbackSetWindowFocus(cbfun WindowCallback) WindowCallback {
+	previous := io.SetWindowFocus
+
+	io.SetWindowFocus = cbfun
+
+	// if the function is null, clear the callback
+	if cbfun == nil {
+		C.iggRemoveCallbackSetWindowFocus(io.handle)
+	} else {
+		C.iggSetCallbackSetWindowFocus(io.handle)
+	}
+
+	return previous
 }
 
-// SetConfigFlags sets the gamepad/keyboard navigation options, etc.
-func (io IO) SetConfigFlags(flags int) {
-	C.iggIoSetConfigFlags(io.handle, C.int(flags))
+//export goGetWindowFocusCallback
+func goGetWindowFocusCallback(v unsafe.Pointer) C.int {
+	viewport := GetViewport(v)
+
+	// Forwarding callback into the registered Go function
+	focus := platform.GetWindowFocus(viewport)
+	if focus {
+		return 1
+	}
+	return 0
+	//return (C.int)(focus)
 }
 
-// GetConfigFlags returns the currently set configuration flags
-func (io IO) GetConfigFlags() int {
-	return int(C.iggIoGetConfigFlags(io.handle))
+//SetCallbackGetWindowFocus sets the callback function in the PlatformIO struct and triggers
+//the C setup to route the callback back into Go
+func (io PlatformIO) SetCallbackGetWindowFocus(cbfun GetWindowBoolCallback) GetWindowBoolCallback {
+	previous := io.GetWindowFocus
+
+	io.GetWindowFocus = cbfun
+
+	// if the function is null, clear the callback
+	if cbfun == nil {
+		C.iggRemoveCallbackGetWindowFocus(io.handle)
+	} else {
+		C.iggSetCallbackGetWindowFocus(io.handle)
+	}
+
+	return previous
 }
 
-// SetBackendFlags sets back-end capabilities.
-func (io IO) SetBackendFlags(flags int) {
-	C.iggIoSetBackendFlags(io.handle, C.int(flags))
+//export goGetWindowMinimizedCallback
+func goGetWindowMinimizedCallback(v unsafe.Pointer) C.int {
+	viewport := GetViewport(v)
+
+	// Forwarding callback into the registered Go function
+	minimized := platform.GetWindowMinimized(viewport)
+	if minimized {
+		return 1
+	}
+	return 0
+	//return (C.int)(minimized)
+}
+
+//SetCallbackGetWindowMinimized sets the callback function in the PlatformIO struct and triggers
+//the C setup to route the callback back into Go
+func (io PlatformIO) SetCallbackGetWindowMinimized(cbfun GetWindowBoolCallback) GetWindowBoolCallback {
+	previous := io.GetWindowMinimized
+
+	io.GetWindowMinimized = cbfun
+
+	// if the function is null, clear the callback
+	if cbfun == nil {
+		C.iggRemoveCallbackGetWindowMinimized(io.handle)
+	} else {
+		C.iggSetCallbackGetWindowMinimized(io.handle)
+	}
+
+	return previous
+}
+
+//export goSetWindowTitleCallback
+func goSetWindowTitleCallback(v unsafe.Pointer, title *C.char) {
+	viewport := GetViewport(v)
+
+	// Forwarding callback into the registered Go function
+	platform.SetWindowTitle(viewport, C.GoString(title))
+}
+
+//SetCallbackSetWindowTitle sets the callback function in the PlatformIO struct and triggers
+//the C setup to route the callback back into Go
+func (io PlatformIO) SetCallbackSetWindowTitle(cbfun SetWindowTitleCallback) SetWindowTitleCallback {
+	previous := io.SetWindowTitle
+
+	io.SetWindowTitle = cbfun
+
+	// if the function is null, clear the callback
+	if cbfun == nil {
+		C.iggRemoveCallbackSetWindowTitle(io.handle)
+	} else {
+		C.iggSetCallbackSetWindowTitle(io.handle)
+	}
+
+	return previous
+}
+
+//export goRenderWindowCallback
+func goRenderWindowCallback(v unsafe.Pointer) {
+	viewport := GetViewport(v)
+
+	// Forwarding callback into the registered Go function
+	platform.RenderWindow(viewport)
+}
+
+//SetCallbackRenderWindow sets the callback function in the PlatformIO struct and triggers
+//the C setup to route the callback back into Go
+func (io PlatformIO) SetCallbackRenderWindow(cbfun WindowCallback) WindowCallback {
+	previous := io.RenderWindow
+
+	io.RenderWindow = cbfun
+
+	// if the function is null, clear the callback
+	if cbfun == nil {
+		C.iggRemoveCallbackRenderWindow(io.handle)
+	} else {
+		C.iggSetCallbackRenderWindow(io.handle)
+	}
+
+	return previous
+}
+
+//export goSwapBuffersCallback
+func goSwapBuffersCallback(v unsafe.Pointer) {
+	viewport := GetViewport(v)
+
+	// Forwarding callback into the registered Go function
+	platform.SwapBuffers(viewport)
+}
+
+//SetCallbackSwapBuffers sets the callback function in the PlatformIO struct and triggers
+//the C setup to route the callback back into Go
+func (io PlatformIO) SetCallbackSwapBuffers(cbfun WindowCallback) WindowCallback {
+	previous := io.SwapBuffers
+
+	io.SwapBuffers = cbfun
+
+	// if the function is null, clear the callback
+	if cbfun == nil {
+		C.iggRemoveCallbackSwapBuffers(io.handle)
+	} else {
+		C.iggSetCallbackSwapBuffers(io.handle)
+	}
+
+	return previous
 }

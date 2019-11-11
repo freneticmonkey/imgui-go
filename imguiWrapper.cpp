@@ -23,11 +23,6 @@ void iggSetCurrentContext(IggContext context)
    ImGui::SetCurrentContext(reinterpret_cast<ImGuiContext *>(context));
 }
 
-IggPlatformIO iggGetCurrentPlatformIO()
-{
-   return reinterpret_cast<IggPlatformIO>(&ImGui::GetPlatformIO());
-}
-
 IggViewport iggGetMainViewport()
 {
    return reinterpret_cast<IggViewport>(ImGui::GetMainViewport());
