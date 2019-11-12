@@ -62,7 +62,7 @@ func goCreateWindowCallback(v unsafe.Pointer) {
 
 //SetCallbackCreateWindow sets the callback function in the PlatformIO struct and triggers
 //the C setup to route the callback back into Go
-func (io PlatformIO) SetCallbackCreateWindow(cbfun WindowCallback) WindowCallback {
+func (io *PlatformIO) SetCallbackCreateWindow(cbfun WindowCallback) WindowCallback {
 	previous := io.CreateWindow
 
 	io.CreateWindow = cbfun
@@ -79,15 +79,17 @@ func (io PlatformIO) SetCallbackCreateWindow(cbfun WindowCallback) WindowCallbac
 
 //export goDestroyWindowCallback
 func goDestroyWindowCallback(v unsafe.Pointer) {
-	viewport := GetViewport(v)
+	if v != nil {
+		viewport := GetViewport(v)
 
-	// Forwarding callback into the registered Go function
-	platform.DestroyWindow(viewport)
+		// Forwarding callback into the registered Go function
+		platform.DestroyWindow(viewport)
+	}
 }
 
 //SetCallbackDestroyWindow sets the callback function in the PlatformIO struct and triggers
 //the C setup to route the callback back into Go
-func (io PlatformIO) SetCallbackDestroyWindow(cbfun WindowCallback) WindowCallback {
+func (io *PlatformIO) SetCallbackDestroyWindow(cbfun WindowCallback) WindowCallback {
 	previous := io.DestroyWindow
 
 	io.DestroyWindow = cbfun
@@ -112,7 +114,7 @@ func goShowWindowCallback(v unsafe.Pointer) {
 
 //SetCallbackShowWindow sets the callback function in the PlatformIO struct and triggers
 //the C setup to route the callback back into Go
-func (io PlatformIO) SetCallbackShowWindow(cbfun WindowCallback) WindowCallback {
+func (io *PlatformIO) SetCallbackShowWindow(cbfun WindowCallback) WindowCallback {
 	previous := io.ShowWindow
 
 	io.ShowWindow = cbfun
@@ -137,7 +139,7 @@ func goSetWindowPosCallback(v unsafe.Pointer, xpos, ypos C.float) {
 
 //SetCallbackSetWindowPos sets the callback function in the PlatformIO struct and triggers
 //the C setup to route the callback back into Go
-func (io PlatformIO) SetCallbackSetWindowPos(cbfun SetWindowVecCallback) SetWindowVecCallback {
+func (io *PlatformIO) SetCallbackSetWindowPos(cbfun SetWindowVecCallback) SetWindowVecCallback {
 	previous := io.SetWindowPos
 
 	io.SetWindowPos = cbfun
@@ -165,7 +167,7 @@ func goGetWindowPosCallback(v unsafe.Pointer, xpos, ypos *C.float) {
 
 //SetCallbackGetWindowPos sets the callback function in the PlatformIO struct and triggers
 //the C setup to route the callback back into Go
-func (io PlatformIO) SetCallbackGetWindowPos(cbfun GetWindowVecCallback) GetWindowVecCallback {
+func (io *PlatformIO) SetCallbackGetWindowPos(cbfun GetWindowVecCallback) GetWindowVecCallback {
 	previous := io.GetWindowPos
 
 	io.GetWindowPos = cbfun
@@ -190,7 +192,7 @@ func goSetWindowSizeCallback(v unsafe.Pointer, xpos, ypos C.float) {
 
 //SetCallbackSetWindowSize sets the callback function in the PlatformIO struct and triggers
 //the C setup to route the callback back into Go
-func (io PlatformIO) SetCallbackSetWindowSize(cbfun SetWindowVecCallback) SetWindowVecCallback {
+func (io *PlatformIO) SetCallbackSetWindowSize(cbfun SetWindowVecCallback) SetWindowVecCallback {
 	previous := io.SetWindowSize
 
 	io.SetWindowSize = cbfun
@@ -217,7 +219,7 @@ func goGetWindowSizeCallback(v unsafe.Pointer, xpos, ypos *C.float) {
 
 //SetCallbackGetWindowSize sets the callback function in the PlatformIO struct and triggers
 //the C setup to route the callback back into Go
-func (io PlatformIO) SetCallbackGetWindowSize(cbfun GetWindowVecCallback) GetWindowVecCallback {
+func (io *PlatformIO) SetCallbackGetWindowSize(cbfun GetWindowVecCallback) GetWindowVecCallback {
 	previous := io.GetWindowSize
 
 	io.GetWindowSize = cbfun
@@ -242,7 +244,7 @@ func goSetWindowFocusCallback(v unsafe.Pointer) {
 
 //SetCallbackSetWindowFocus sets the callback function in the PlatformIO struct and triggers
 //the C setup to route the callback back into Go
-func (io PlatformIO) SetCallbackSetWindowFocus(cbfun WindowCallback) WindowCallback {
+func (io *PlatformIO) SetCallbackSetWindowFocus(cbfun WindowCallback) WindowCallback {
 	previous := io.SetWindowFocus
 
 	io.SetWindowFocus = cbfun
@@ -272,7 +274,7 @@ func goGetWindowFocusCallback(v unsafe.Pointer) C.int {
 
 //SetCallbackGetWindowFocus sets the callback function in the PlatformIO struct and triggers
 //the C setup to route the callback back into Go
-func (io PlatformIO) SetCallbackGetWindowFocus(cbfun GetWindowBoolCallback) GetWindowBoolCallback {
+func (io *PlatformIO) SetCallbackGetWindowFocus(cbfun GetWindowBoolCallback) GetWindowBoolCallback {
 	previous := io.GetWindowFocus
 
 	io.GetWindowFocus = cbfun
@@ -302,7 +304,7 @@ func goGetWindowMinimizedCallback(v unsafe.Pointer) C.int {
 
 //SetCallbackGetWindowMinimized sets the callback function in the PlatformIO struct and triggers
 //the C setup to route the callback back into Go
-func (io PlatformIO) SetCallbackGetWindowMinimized(cbfun GetWindowBoolCallback) GetWindowBoolCallback {
+func (io *PlatformIO) SetCallbackGetWindowMinimized(cbfun GetWindowBoolCallback) GetWindowBoolCallback {
 	previous := io.GetWindowMinimized
 
 	io.GetWindowMinimized = cbfun
@@ -327,7 +329,7 @@ func goSetWindowTitleCallback(v unsafe.Pointer, title *C.char) {
 
 //SetCallbackSetWindowTitle sets the callback function in the PlatformIO struct and triggers
 //the C setup to route the callback back into Go
-func (io PlatformIO) SetCallbackSetWindowTitle(cbfun SetWindowTitleCallback) SetWindowTitleCallback {
+func (io *PlatformIO) SetCallbackSetWindowTitle(cbfun SetWindowTitleCallback) SetWindowTitleCallback {
 	previous := io.SetWindowTitle
 
 	io.SetWindowTitle = cbfun
@@ -352,7 +354,7 @@ func goRenderWindowCallback(v unsafe.Pointer) {
 
 //SetCallbackRenderWindow sets the callback function in the PlatformIO struct and triggers
 //the C setup to route the callback back into Go
-func (io PlatformIO) SetCallbackRenderWindow(cbfun WindowCallback) WindowCallback {
+func (io *PlatformIO) SetCallbackRenderWindow(cbfun WindowCallback) WindowCallback {
 	previous := io.RenderWindow
 
 	io.RenderWindow = cbfun
@@ -377,7 +379,7 @@ func goSwapBuffersCallback(v unsafe.Pointer) {
 
 //SetCallbackSwapBuffers sets the callback function in the PlatformIO struct and triggers
 //the C setup to route the callback back into Go
-func (io PlatformIO) SetCallbackSwapBuffers(cbfun WindowCallback) WindowCallback {
+func (io *PlatformIO) SetCallbackSwapBuffers(cbfun WindowCallback) WindowCallback {
 	previous := io.SwapBuffers
 
 	io.SwapBuffers = cbfun
@@ -390,4 +392,14 @@ func (io PlatformIO) SetCallbackSwapBuffers(cbfun WindowCallback) WindowCallback
 	}
 
 	return previous
+}
+
+// ClearMonitors removes all monitors from the Imgui Monitor list
+func (io *PlatformIO) ClearMonitors() {
+	C.iggClearMonitors(io.handle)
+}
+
+// AddMonitor adds a monitor with the appropriate properties to the Imgui monitor list
+func (io *PlatformIO) AddMonitor(x, y, w, h int) {
+	C.iggCreateMonitor(io.handle, C.int(x), C.int(y), C.int(w), C.int(h))
 }
