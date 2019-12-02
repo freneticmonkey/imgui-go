@@ -43,3 +43,20 @@ int iggViewportGetFlags(IggViewport handle)
     return (int)v->Flags;
 }
 
+void iggViewportPlatformRequestClose(IggViewport handle)
+{
+    ImGuiViewport *v = reinterpret_cast<ImGuiViewport *>(handle);
+    v->PlatformRequestClose = true;
+}
+
+void iggViewportPlatformRequestMove(IggViewport handle)
+{
+    ImGuiViewport *v = reinterpret_cast<ImGuiViewport *>(handle);
+    v->PlatformRequestMove = true;
+}
+
+void iggViewportPlatformRequestResize(IggViewport handle)
+{
+    ImGuiViewport *v = reinterpret_cast<ImGuiViewport *>(handle);
+    v->PlatformRequestResize = true;
+}

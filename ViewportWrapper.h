@@ -18,6 +18,11 @@ extern int iggViewportGetSizeY(IggViewport handle);
 
 extern int iggViewportGetFlags(IggViewport handle);
 
+extern void iggViewportPlatformRequestClose(IggViewport handle);
+extern void iggViewportPlatformRequestMove(IggViewport handle);
+extern void iggViewportPlatformRequestResize(IggViewport handle);
+
+
 #ifdef __cplusplus
 }
 #endif

@@ -23,25 +23,63 @@ const (
     ViewportFlags_TopMost                  = 1 << 6   // Platform Window: Display on top (for tooltips only).
     ViewportFlags_Minimized                = 1 << 7   // Platform Window: Window is minimized, can skip render. When minimized we tend to avoid using the viewport pos/size for clipping window or testing if they are contained in the viewport.
     ViewportFlags_NoAutoMerge              = 1 << 8   // Platform Window: Avoid merging this widow into another host window. This can only be set via ImGuiWindowClass viewport flags override (because we need to now ahead if we are going to create a viewport in the first place!).
-    ViewportFlags_CanHostOtherWindows      = 1 << 9    // Main viewport: can host multiple imgui windows (secondary viewports are associated to a single window).
+	ViewportFlags_CanHostOtherWindows      = 1 << 9    // Main viewport: can host multiple imgui windows (secondary viewports are associated to a single window).
+)
+
+const (
+	BackendFlags_PlatformHasViewports = 1 << 10
+	BackendFlags_RendererHasViewports = 1 << 12
 )
 
 // Viewport is a new construct with the imgui 1.74 viewport feature
 type Viewport struct {
 	handle C.IggViewport
-	data unsafe.Pointer
+	data   unsafe.Pointer
+	Owned  bool
+	Title  string
+	Id	   int
 }
 
 // Store for viewports
 var viewports = map[unsafe.Pointer]*Viewport{}
+func GetViewports() map[unsafe.Pointer]*Viewport {
+	return viewports
+}
+
+var viewportList = []*Viewport{}
+func GetViewportList() []*Viewport{
+	return viewportList
+}
+
+var id int = 0
 
 //NewViewport creates a viewport using the pointer parameter
 func NewViewport(v unsafe.Pointer) *Viewport {
 	viewport := &Viewport{
 		handle: (C.IggViewport)(v),
+		Id: id,
 	}
+	id++
 	viewports[v] = viewport
+	viewportList = append(viewportList, viewport)
 	return viewport
+}
+
+func DeleteViewport(viewport *Viewport) {
+	index := unsafe.Pointer(viewport.handle)
+	_, ok := viewports[index]
+	if ok {
+		viewport.SetData(nil)
+		viewport.SetPlatformHandle(nil)
+		delete(viewports, index)
+		newViewports := []*Viewport{}
+		for _, vp := range viewportList {
+			if vp.Id != viewport.Id {
+				newViewports = append(newViewports, vp)
+			}
+		}
+		viewportList = newViewports
+	}
 }
 
 //GetMainViewport returns the main window / viewport that is owned by the application
@@ -92,4 +130,19 @@ func (v *Viewport) SetData(d unsafe.Pointer) {
 //GetData returns the data pointer stored inside Viewport
 func (v Viewport) GetData() unsafe.Pointer {
 	return v.data
+}
+
+//PlatformRequestClose signals to imgui that the Viewport needs to update the viewport close state
+func (v Viewport) PlatformRequestClose() {
+	C.iggViewportPlatformRequestClose(v.handle)
+}
+
+//PlatformRequestMove signals to imgui that the Viewport needs to update the viewport position state
+func (v Viewport) PlatformRequestMove() {
+	C.iggViewportPlatformRequestMove(v.handle)
+}
+
+//PlatformRequestResize signals to imgui that the Viewport needs to update the viewport size state
+func (v Viewport) PlatformRequestResize() {
+	C.iggViewportPlatformRequestResize(v.handle)
 }

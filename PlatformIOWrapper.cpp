@@ -9,8 +9,11 @@ IggPlatformIO iggGetCurrentPlatformIO()
    return reinterpret_cast<IggPlatformIO>(&ImGui::GetPlatformIO());
 }
 
-void iggCreateWindowCallback(ImGuiViewport *v)
+void iggCreateWindowCallback(ImGuiViewport* v)
 {
+    // ImGuiViewport *view = reinterpret_cast<ImGuiViewport *>(v);
+    if (v == NULL)
+        return;
     goCreateWindowCallback(v);
 }
 

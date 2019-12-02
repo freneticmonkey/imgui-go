@@ -41,11 +41,15 @@ type PlatformIO struct {
 	SwapBuffers        WindowCallback
 }
 
-var platform PlatformIO
+var platform *PlatformIO = nil
 
 // CurrentPlatformIO returns access to the ImGui communication struct for the currently active context.
-func CurrentPlatformIO() PlatformIO {
-	platform = PlatformIO{handle: C.iggGetCurrentPlatformIO()}
+func CurrentPlatformIO() *PlatformIO {
+	if platform == nil {
+		platform = &PlatformIO{
+			handle: C.iggGetCurrentPlatformIO(),
+		}
+	}
 	return platform
 }
 
@@ -55,9 +59,12 @@ func CurrentPlatformIO() PlatformIO {
 
 //export goCreateWindowCallback
 func goCreateWindowCallback(v unsafe.Pointer) {
-	viewport := GetViewport(v)
-	// Forwarding callback into the registered Go function
-	platform.CreateWindow(viewport)
+	if v != nil {
+		viewport := NewViewport(v)
+
+		// Forwarding callback into the registered Go function
+		CurrentPlatformIO().CreateWindow(viewport)
+	}
 }
 
 //SetCallbackCreateWindow sets the callback function in the PlatformIO struct and triggers
@@ -79,12 +86,10 @@ func (io *PlatformIO) SetCallbackCreateWindow(cbfun WindowCallback) WindowCallba
 
 //export goDestroyWindowCallback
 func goDestroyWindowCallback(v unsafe.Pointer) {
-	if v != nil {
-		viewport := GetViewport(v)
+	viewport := GetViewport(v)
 
-		// Forwarding callback into the registered Go function
-		platform.DestroyWindow(viewport)
-	}
+	// Forwarding callback into the registered Go function
+	CurrentPlatformIO().DestroyWindow(viewport)
 }
 
 //SetCallbackDestroyWindow sets the callback function in the PlatformIO struct and triggers
@@ -109,7 +114,7 @@ func goShowWindowCallback(v unsafe.Pointer) {
 	viewport := GetViewport(v)
 
 	// Forwarding callback into the registered Go function
-	platform.ShowWindow(viewport)
+	CurrentPlatformIO().ShowWindow(viewport)
 }
 
 //SetCallbackShowWindow sets the callback function in the PlatformIO struct and triggers
@@ -134,7 +139,7 @@ func goSetWindowPosCallback(v unsafe.Pointer, xpos, ypos C.float) {
 	viewport := GetViewport(v)
 
 	// Forwarding callback into the registered Go function
-	platform.SetWindowPos(viewport, float64(xpos), float64(ypos))
+	CurrentPlatformIO().SetWindowPos(viewport, float64(xpos), float64(ypos))
 }
 
 //SetCallbackSetWindowPos sets the callback function in the PlatformIO struct and triggers
@@ -159,7 +164,7 @@ func goGetWindowPosCallback(v unsafe.Pointer, xpos, ypos *C.float) {
 	viewport := GetViewport(v)
 
 	// Forwarding callback into the registered Go function
-	x, y := platform.GetWindowPos(viewport)
+	x, y := CurrentPlatformIO().GetWindowPos(viewport)
 	*xpos = (C.float)(x)
 	*ypos = (C.float)(y) 
 
@@ -187,7 +192,7 @@ func goSetWindowSizeCallback(v unsafe.Pointer, xpos, ypos C.float) {
 	viewport := GetViewport(v)
 
 	// Forwarding callback into the registered Go function
-	platform.SetWindowSize(viewport, float64(xpos), float64(ypos))
+	CurrentPlatformIO().SetWindowSize(viewport, float64(xpos), float64(ypos))
 }
 
 //SetCallbackSetWindowSize sets the callback function in the PlatformIO struct and triggers
@@ -212,7 +217,7 @@ func goGetWindowSizeCallback(v unsafe.Pointer, xpos, ypos *C.float) {
 	viewport := GetViewport(v)
 
 	// Forwarding callback into the registered Go function
-	x, y := platform.GetWindowSize(viewport)
+	x, y := CurrentPlatformIO().GetWindowSize(viewport)
 	*xpos = (C.float)(x)
 	*ypos = (C.float)(y)
 }
@@ -239,7 +244,7 @@ func goSetWindowFocusCallback(v unsafe.Pointer) {
 	viewport := GetViewport(v)
 
 	// Forwarding callback into the registered Go function
-	platform.SetWindowFocus(viewport)
+	CurrentPlatformIO().SetWindowFocus(viewport)
 }
 
 //SetCallbackSetWindowFocus sets the callback function in the PlatformIO struct and triggers
@@ -264,7 +269,7 @@ func goGetWindowFocusCallback(v unsafe.Pointer) C.int {
 	viewport := GetViewport(v)
 
 	// Forwarding callback into the registered Go function
-	focus := platform.GetWindowFocus(viewport)
+	focus := CurrentPlatformIO().GetWindowFocus(viewport)
 	if focus {
 		return 1
 	}
@@ -294,7 +299,7 @@ func goGetWindowMinimizedCallback(v unsafe.Pointer) C.int {
 	viewport := GetViewport(v)
 
 	// Forwarding callback into the registered Go function
-	minimized := platform.GetWindowMinimized(viewport)
+	minimized := CurrentPlatformIO().GetWindowMinimized(viewport)
 	if minimized {
 		return 1
 	}
@@ -324,7 +329,7 @@ func goSetWindowTitleCallback(v unsafe.Pointer, title *C.char) {
 	viewport := GetViewport(v)
 
 	// Forwarding callback into the registered Go function
-	platform.SetWindowTitle(viewport, C.GoString(title))
+	CurrentPlatformIO().SetWindowTitle(viewport, C.GoString(title))
 }
 
 //SetCallbackSetWindowTitle sets the callback function in the PlatformIO struct and triggers
@@ -349,7 +354,7 @@ func goRenderWindowCallback(v unsafe.Pointer) {
 	viewport := GetViewport(v)
 
 	// Forwarding callback into the registered Go function
-	platform.RenderWindow(viewport)
+	CurrentPlatformIO().RenderWindow(viewport)
 }
 
 //SetCallbackRenderWindow sets the callback function in the PlatformIO struct and triggers
@@ -374,7 +379,7 @@ func goSwapBuffersCallback(v unsafe.Pointer) {
 	viewport := GetViewport(v)
 
 	// Forwarding callback into the registered Go function
-	platform.SwapBuffers(viewport)
+	CurrentPlatformIO().SwapBuffers(viewport)
 }
 
 //SetCallbackSwapBuffers sets the callback function in the PlatformIO struct and triggers

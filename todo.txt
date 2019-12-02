@@ -1,0 +1,13 @@
+TODO:
+
+- Wrap Viewport
+    - Wrapper needs
+        - Setter for user data - pointer for lookup to viewport instance
+        - Setter for handle = glfwwindow *
+        - Setter for window owned
+        - Getter for position
+        - Getter for handle Raw - only for taskbar icon hiding
+    - Setup Map for viewports which map a pointer to the viewport instance
+    - 
+- Add AddMonitor to PlatformIO wrapper
+- 

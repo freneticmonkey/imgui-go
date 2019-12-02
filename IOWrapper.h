@@ -14,6 +14,7 @@ extern IggBool iggWantTextInput(IggIO handle);
 extern IggFontAtlas iggIoGetFonts(IggIO handle);
 
 extern void iggIoSetDisplaySize(IggIO handle, IggVec2 const *value);
+extern void iggIoSetDisplayFrameBufferScale(IggIO handle, IggVec2 const *value);
 extern void iggIoSetMousePosition(IggIO handle, IggVec2 const *value);
 extern void iggIoSetMouseButtonDown(IggIO handle, int index, IggBool value);
 extern void iggIoAddMouseWheelDelta(IggIO handle, float x, float y);
